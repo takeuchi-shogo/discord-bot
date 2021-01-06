@@ -19,18 +19,12 @@ var buffer = make([][]byte, 0)
 
 const (
 	//TOKEN はBotのID
-	TOKEN = "NzkyNzAyODkwMDQ0MjkzMTIw.X-hkGA.y20t2AAUxXyoPyNHExB587kYQVA"
+	TOKEN = "NzkyNzAyODkwMDQ0MjkzMTIw.X-hkGA.lFD_2baEvCltW7ceBjqurh6jLm8"
 	//BotName はBotの名前
 	BotName = "にいな"
 )
 
 func main() {
-
-	err := loadSound()
-	if err != nil {
-		fmt.Println("Error loading sound: ", err)
-		return
-	}
 
 	dg, err := discordgo.New("Bot " + TOKEN)
 	if err != nil {
@@ -43,6 +37,8 @@ func main() {
 
 	//on message
 	dg.AddHandler(messageCreate)
+
+	dg.AddHandler(loadSound)
 
 	//websocketを開いてRunning開始
 	err = dg.Open()
@@ -225,4 +221,8 @@ func playVoice1(s *discordgo.Session, guildID, channelID string) (err error) {
 	vc.Speaking(false)
 
 	return nil
+}
+
+func playVoice2(s *discordgo.Session, guildID, channelID string) (err error) {
+
 }
