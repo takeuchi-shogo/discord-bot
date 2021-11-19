@@ -1,0 +1,16 @@
+package config
+
+type Config struct {
+	Token   string
+	BotName string
+}
+
+func NewConfig() *Config {
+	c := new(Config)
+
+	c.Token = your discord token
+
+	c.BotName = your bot name
+
+	return c
+}
