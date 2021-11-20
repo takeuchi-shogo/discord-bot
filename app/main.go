@@ -76,44 +76,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	fmt.Println("<< " + m.Content + " by " + nick)
 
-	if m.Content == "こんにちわ" {
-		s.ChannelMessageSend(m.ChannelID, "こんにちわ")
-		fmt.Println("> こんにちわ")
-	}
-	if strings.Contains(m.Content, "ww") {
-		s.ChannelMessageSend(m.ChannelID, "lol")
-		fmt.Println("> lol")
-	}
-
-	if strings.HasPrefix(m.Content, "!air") {
-
-		// Find the channel that the message came from.
-		c, err := s.State.Channel(m.ChannelID)
-		if err != nil {
-			// Could not find channel.
-			return
-		}
-
-		// Find the guild for that channel.
-		g, err := s.State.Guild(c.GuildID)
-		if err != nil {
-			// Could not find guild.
-			return
-		}
-
-		// Look for the message sender in that guild's current voice states.
-		for _, vs := range g.VoiceStates {
-			if vs.UserID == m.Author.ID {
-				err = PlaySound(s, g.ID, vs.ChannelID)
-				if err != nil {
-					fmt.Println("Error playing sound:", err)
-				}
-
-				return
-			}
-		}
-	}
-
 	switch {
 	case strings.HasPrefix(m.Content, "!join"):
 		c, err := s.State.Channel(m.ChannelID)
@@ -133,7 +95,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					fmt.Println(err)
 				}
 
-				vcsession.Speaking(true)
 				s.ChannelMessageSend(m.ChannelID, "にいながきたよ")
 
 			}
@@ -141,16 +102,71 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	case strings.HasPrefix(m.Content, "!bye"):
 
-		vcsession.Speaking(false)
+		// vcsession.Speaking(false)
 
 		s.ChannelMessageSend(m.ChannelID, "帰るね。バイバーイ")
 		vcsession.Disconnect()
 	}
 
-	CreateWav(vcsession, m)
+	if m.Content == "こんにちわ" {
+		CreateWav(vcsession, m)
 
-	dgvoice.PlayAudioFile(vcsession, "output.wav", make(chan bool))
+		fileName := "output.wav"
 
+		fmt.Println("reading file name: ", fileName)
+
+		vcsession.Speaking(true)
+
+		// vc, err := s.ChannelVoiceJoin(m.GuildID, m.ChannelID, false, false)
+		// if err != nil {
+		// 	fmt.Println("discord voice Connection:", err)
+		// }
+		// fmt.Println()
+		dgvoice.PlayAudioFile(vcsession, fileName, make(chan bool))
+
+		err := vcsession.Speaking(false)
+		if err != nil {
+			fmt.Println("Speaking false error: ", err)
+		}
+
+		s.ChannelMessageSend(m.ChannelID, "こんにちわ")
+		fmt.Println("> こんにちわ")
+	}
+	if strings.Contains(m.Content, "ww") {
+		s.ChannelMessageSend(m.ChannelID, "lol")
+		fmt.Println("> lol")
+	}
+
+	if strings.HasPrefix(m.Content, "!air") {
+
+		// Find the channel that the message came from.
+		c, err := s.State.Channel(m.ChannelID)
+		if err != nil {
+			// Could not find channel.
+			fmt.Println("err1: ", err)
+			return
+		}
+
+		// Find the guild for that channel.
+		g, err := s.State.Guild(c.GuildID)
+		if err != nil {
+			// Could not find guild.
+			fmt.Println("err2: ", err)
+			return
+		}
+
+		// Look for the message sender in that guild's current voice states.
+		for _, vs := range g.VoiceStates {
+			if vs.UserID == m.Author.ID {
+				// err = PlaySound(s, g.ID, vs.ChannelID)
+				// if err != nil {
+				// 	fmt.Println("Error playing sound:", err)
+				// }
+
+				// return
+			}
+		}
+	}
 }
 
 // //CreateWav ここでwav音声ファイルを作成する
@@ -210,34 +226,39 @@ func CreateWav(v *discordgo.VoiceConnection, m *discordgo.MessageCreate) {
 			log.Println("Error reading wav file: ", err)
 		}
 
+		buffer = append(buffer, InBuf)
+
+		for _, buff := range buffer {
+			v.OpusSend <- buff
+		}
 	}
 
 }
 
-func PlaySound(s *discordgo.Session, guildID, channelID string) (err error) {
+// func playSound(s *discordgo.Session, guildID, channelID string) (err error) {
 
-	// Join the provided voice channel.
-	vc, err := s.ChannelVoiceJoin(guildID, channelID, false, true)
-	if err != nil {
-		return err
-	}
+// 	// Join the provided voice channel.
+// 	vc, err := s.ChannelVoiceJoin(guildID, channelID, false, true)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// Sleep for a specified amount of time before playing the sound
-	//time.Sleep(250 * time.Millisecond)
+// 	// Sleep for a specified amount of time before playing the sound
+// 	//time.Sleep(250 * time.Millisecond)
 
-	// Start speaking.
-	vc.Speaking(true)
+// 	// Start speaking.
+// 	// vc.Speaking(true)
 
-	// Send the buffer data.
+// 	// Send the buffer data.
 
-	// Stop speaking
-	//vc.Speaking(false)
+// 	// Stop speaking
+// 	//vc.Speaking(false)
 
-	// Sleep for a specificed amount of time before ending.
-	//time.Sleep(250 * time.Millisecond)
+// 	// Sleep for a specificed amount of time before ending.
+// 	//time.Sleep(250 * time.Millisecond)
 
-	// Disconnect from the provided voice channel.
-	vc.Disconnect()
+// 	// Disconnect from the provided voice channel.
+// 	vc.Disconnect()
 
-	return nil
-}
+// 	return nil
+// }
