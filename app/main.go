@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -136,37 +134,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSend(m.ChannelID, "lol")
 		fmt.Println("> lol")
 	}
-
-	if strings.HasPrefix(m.Content, "!air") {
-
-		// Find the channel that the message came from.
-		c, err := s.State.Channel(m.ChannelID)
-		if err != nil {
-			// Could not find channel.
-			fmt.Println("err1: ", err)
-			return
-		}
-
-		// Find the guild for that channel.
-		g, err := s.State.Guild(c.GuildID)
-		if err != nil {
-			// Could not find guild.
-			fmt.Println("err2: ", err)
-			return
-		}
-
-		// Look for the message sender in that guild's current voice states.
-		for _, vs := range g.VoiceStates {
-			if vs.UserID == m.Author.ID {
-				// err = PlaySound(s, g.ID, vs.ChannelID)
-				// if err != nil {
-				// 	fmt.Println("Error playing sound:", err)
-				// }
-
-				// return
-			}
-		}
-	}
 }
 
 // //CreateWav ここでwav音声ファイルを作成する
@@ -186,8 +153,8 @@ func CreateWav(v *discordgo.VoiceConnection, m *discordgo.MessageCreate) {
 
 		c := "open_jtalk"
 		p := []string{
-			"-x", "/usr/local/Cellar/open-jtalk/1.11/dic/",
-			"-m", "/usr/local/Cellar/open-jtalk/1.11/voice/mei/mei_normal.htsvoice",
+			"-x", "discord-bot/open-jtalk/1.11/dic/",
+			"-m", "discord-bot/open-jtalk/1.11/voice/mei/mei_normal.htsvoice",
 			"vc.txt",
 			"-ow", "output.wav",
 		}
@@ -200,65 +167,6 @@ func CreateWav(v *discordgo.VoiceConnection, m *discordgo.MessageCreate) {
 		if err != nil {
 			log.Println("Error opening file: ", err)
 		}
-
-		var opuslen int16
-
-		err = binary.Read(file, binary.LittleEndian, &opuslen)
-
-		if err == io.EOF || err == io.ErrUnexpectedEOF {
-			err := file.Close()
-			if err != nil {
-				log.Println("Error closing file: ", err)
-				return
-			}
-			log.Println("Error io: ", err)
-			return
-		}
-
-		if err != nil {
-			log.Println("Error reading from wav: ", err)
-		}
-
-		InBuf := make([]byte, opuslen)
-		err = binary.Read(file, binary.LittleEndian, &InBuf)
-
-		if err != nil {
-			log.Println("Error reading wav file: ", err)
-		}
-
-		buffer = append(buffer, InBuf)
-
-		for _, buff := range buffer {
-			v.OpusSend <- buff
-		}
 	}
 
 }
-
-// func playSound(s *discordgo.Session, guildID, channelID string) (err error) {
-
-// 	// Join the provided voice channel.
-// 	vc, err := s.ChannelVoiceJoin(guildID, channelID, false, true)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// Sleep for a specified amount of time before playing the sound
-// 	//time.Sleep(250 * time.Millisecond)
-
-// 	// Start speaking.
-// 	// vc.Speaking(true)
-
-// 	// Send the buffer data.
-
-// 	// Stop speaking
-// 	//vc.Speaking(false)
-
-// 	// Sleep for a specificed amount of time before ending.
-// 	//time.Sleep(250 * time.Millisecond)
-
-// 	// Disconnect from the provided voice channel.
-// 	vc.Disconnect()
-
-// 	return nil
-// }
